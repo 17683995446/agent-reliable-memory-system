@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  agent-memory:
+    build: .
+    container_name: agent-memory-system
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./config:/app/config
+      - ./logs:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "from api.memory_system import AgentMemorySystem; s = AgentMemorySystem(); exit(0 if s.health_check()['status'] == 'healthy' else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

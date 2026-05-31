@@ -1,0 +1,18 @@
+# Agent 可靠记忆系统 - 依赖清单
+# 遵循第一性原则：极简、够用、无过度堆叠
+
+# 核心依赖
+numpy>=1.24.0
+faiss-cpu>=1.7.4
+neo4j>=5.14.0
+
+# 工具库
+pyyaml>=6.0
+python-dotenv>=1.0.0
+
+# 可选（如需 GPU 加速向量检索）
+# faiss-gpu>=1.7.4
+
+# 开发依赖（测试阶段使用）
+pytest>=7.4.0
+pytest-asyncio>=0.21.0

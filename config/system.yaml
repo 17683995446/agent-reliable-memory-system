@@ -1,0 +1,117 @@
+# Agent 可靠记忆系统 - 全局配置
+# 阶段 21-40：基础架构配置
+
+# 系统基础配置
+system:
+  name: "AgentReliableMemory"
+  version: "1.0.0"
+  debug: false
+  
+# L1 瞬时工作记忆配置（阶段 24-25）
+l1_memory:
+  # 会话上下文最大条目数
+  max_context_items: 100
+  # 单条内容最大字符数
+  max_content_length: 4096
+  # 任务结束后保留时间（秒），0表示立即清理
+  retention_after_task: 0
+  
+# L2 情景经验记忆配置（阶段 26-27）
+l2_memory:
+  # FAISS 索引类型: Flat, IVF, HNSW
+  index_type: "Flat"
+  # 向量维度（根据 Embedding 模型确定）
+  vector_dim: 768
+  # 相似度阈值（cosine similarity）
+  similarity_threshold: 0.75
+  # 最大返回结果数
+  max_results: 10
+  # 索引文件存储路径
+  index_path: "./data/l2_vectors/faiss.index"
+  metadata_path: "./data/l2_vectors/metadata.db"
+  
+# L3 永久事实记忆配置（阶段 28-29）
+l3_memory:
+  # Neo4j 连接配置
+  neo4j:
+    uri: "bolt://localhost:7687"
+    user: "neo4j"
+    password: "${NEO4J_PASSWORD}"
+    database: "agent_memory"
+  # SQLite 配置（版本快照、配置存储）
+  sqlite:
+    db_path: "./data/l3_graph/config.db"
+  
+# 预处理模块配置（阶段 41-45）
+preprocessing:
+  # 噪音过滤
+  noise_filter:
+    min_content_length: 5
+    max_duplicate_edit_distance: 3
+  # 隐私脱敏
+  privacy:
+    encrypt_sensitive: true
+    encryption_key: "${ENCRYPTION_KEY}"
+    sensitive_patterns:
+      - "phone"
+      - "email"
+      - "id_card"
+      - "address"
+  # 幻觉拦截
+  hallucination:
+    fuzzy_keywords:
+      - "可能"
+      - "大概"
+      - "也许"
+      - "似乎"
+    conflict_check: true
+    
+# 召回模块配置（阶段 50-55）
+recall:
+  # 权重配置（任务匹配度、时效性、使用频次）
+  weights:
+    task_match: 0.5
+    recency: 0.3
+    frequency: 0.2
+  # 限流熔断
+  limits:
+    l3_max: 5
+    l2_max: 10
+    l1_all: true
+  # 时效性衰减（天数 -> 得分）
+  recency_scores:
+    7: 1.0
+    30: 0.7
+    90: 0.4
+    default: 0.1
+    
+# 治理模块配置（阶段 56-60, 61-80）
+governance:
+  # L2 自动遗忘阈值
+  eviction:
+    inactive_days: 90
+    archive_days: 180
+    min_access_count: 1
+  # 冗余清理
+  dedup:
+    similarity_threshold: 0.95
+    cleanup_interval_hours: 24
+  # 防投毒
+  anti_poison:
+    enabled: true
+    blacklist_keywords: []
+    
+# 日志配置（阶段 34-35）
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "./data/logs/agent_memory.log"
+  max_bytes: 10485760  # 10MB
+  backup_count: 5
+  
+# 会话隔离配置（阶段 37）
+session:
+  # 会话超时时间（秒）
+  timeout_seconds: 3600
+  # 最大并发会话数
+  max_concurrent: 100
